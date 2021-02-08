@@ -17,8 +17,9 @@ public class DtoValidationUtils {
 					throw new DataValidationException("required value found as blank");
 
 			}
+		} else {
+			throw new DataValidationException("Required value found as null");
 		}
-		throw new DataValidationException("Required value found as null");
 	}
 
 }

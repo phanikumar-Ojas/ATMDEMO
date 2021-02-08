@@ -1,9 +1,12 @@
 package com.demo.atm.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -64,13 +67,10 @@ public class ATMController {
 
 	@PostConstruct
 	public void postConstruct() {
-		ATM[] atmArray = null;
 		String response = httpRequestService.getResponse(URL);
 		String mainResponse = response.substring(5, response.length());
-		atmArray = service.fromResponsetoArray(mainResponse);
-		for (ATM atm : atmArray) {
-			atmCacheMap.put(atm, atm.getAddress().getCity());
-		}
+		atmCacheMap = service.fromResponsetoArray(mainResponse);
+
 		log.info("caching completed");
 
 	}
@@ -88,11 +88,13 @@ public class ATMController {
 		}
 
 		List<ATM> atmData = atmCacheMap.keySet().stream().collect(Collectors.toList());
+
 		if (atmData == null || atmData.isEmpty()) {
 			log.error("ATM Data not found");
 			throw new ATMDataNotFoundException("No ATM data Found");
 		}
-		return ResponseEntity.ok(atmCacheMap.keySet().stream().collect(Collectors.toList()));
+//		Collections.reverse(atmData);
+		return ResponseEntity.ok(atmData);
 	}
 
 	@ApiOperation(value = "This  end point is used to find all the ATMS based on the city name", produces = "application/json")
@@ -106,6 +108,10 @@ public class ATMController {
 
 	public ResponseEntity<?> getATMSByCity(
 			@ApiParam(name = "city", value = "it is used to filter the listofAtmsBy city") @NotNull @PathVariable String city) {
+		if (atmCacheMap == null || atmCacheMap.isEmpty()) {
+			log.warn("The deafault cache Values are not found or missing");
+			postConstruct();
+		}
 
 		DtoValidationUtils.validate(city, OPTIONALITY.REQUIRED);
 
@@ -180,12 +186,6 @@ public class ATMController {
 		error.setType(type);
 		error.setDescription(description);
 		return new ResponseEntity(error, httpStatus);
-	}
-
-	@PreDestroy
-	public void preDestory() {
-		atmCacheMap.clear();
-
 	}
 
 }

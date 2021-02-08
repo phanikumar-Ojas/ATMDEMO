@@ -1,5 +1,8 @@
 package com.demo.atm.tranformer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,12 +15,16 @@ public class JsonResponseTransformer implements JsonResponseTransformService {
 
 	private static final Logger log = LoggerFactory.getLogger(JsonResponseTransformer.class);
 
-	public ATM[] fromResponsetoArray(String mainResponse) {
+	public Map<ATM,String> fromResponsetoArray(String mainResponse) {
+		Map<ATM,String> atmCacheMap=new HashMap<>();
 		ATM[] atmArray = null;
 		if (mainResponse != null && !mainResponse.isEmpty()) {
 			try {
 				atmArray = new Gson().fromJson(mainResponse, ATM[].class);
-				return atmArray;
+				for (ATM atm : atmArray) {
+					atmCacheMap.put(atm, atm.getAddress().getCity());
+				}
+				return atmCacheMap;
 
 			} catch (Exception e) {
 				log.error(e.getMessage());
