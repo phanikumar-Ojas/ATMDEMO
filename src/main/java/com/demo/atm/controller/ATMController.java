@@ -30,6 +30,8 @@ import com.demo.atm.entity.ATM;
 import com.demo.atm.enums.OPTIONALITY;
 import com.demo.atm.exception.ATMDataNotFoundException;
 import com.demo.atm.exception.DataValidationException;
+import com.demo.atm.http.HttpRequestor;
+import com.demo.atm.tranformer.JsonResponseTransformService;
 import com.demo.atm.tranformer.JsonResponseTransformer;
 import com.demo.atm.validation.DtoValidationUtils;
 
@@ -48,15 +50,22 @@ public class ATMController {
 	String URL;
 
 	Map<ATM, String> atmCacheMap = new HashMap<>();
+	JsonResponseTransformService service;
+	HttpRequestor httpRequestor;
 
-	public ATMController(@Value("${atm.request.url}") String URL) {
+	public ATMController(@Value("${atm.request.url}") String URL, JsonResponseTransformService service,
+			HttpRequestor httpRequestor) {
 		this.URL = URL;
+		this.service = service;
+		this.httpRequestor = httpRequestor;
 	}
 
 	@PostConstruct
 	public void postConstruct() {
 		ATM[] atmArray = null;
-		atmArray = JsonResponseTransformer.fromResponsetoArray(URL);
+		String response = httpRequestor.getResponse(URL);
+		String mainResponse = response.substring(5, response.length());
+		atmArray = service.fromResponsetoArray(mainResponse);
 		for (ATM atm : atmArray) {
 			atmCacheMap.put(atm, atm.getAddress().getCity());
 		}
@@ -81,7 +90,7 @@ public class ATMController {
 			log.error("ATM Data not found");
 			throw new ATMDataNotFoundException("No ATM data Found");
 		}
-		return ResponseEntity.ok(atmCacheMap.keySet());
+		return ResponseEntity.ok(atmCacheMap.keySet().stream().collect(Collectors.toList()));
 	}
 
 	@ApiOperation(value = "This  end point is used to find all the ATMS based on the city name", produces = "application/json")
@@ -89,10 +98,10 @@ public class ATMController {
 			@ApiResponse(code = 200, message = "The atm list is retrieved  based on the city name successfully"),
 			@ApiResponse(code = 204, message = "No Content found"),
 			@ApiResponse(code = 400, message = "The value you have entered is invalid") })
-	
+
 	@GetMapping(value = "/byCity/{city}")
 	@Cacheable("atmsByCity")
-	
+
 	public ResponseEntity<?> getATMSByCity(
 			@ApiParam(name = "city", value = "it is used to filter the listofAtmsBy city") @NotNull @PathVariable String city) {
 

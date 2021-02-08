@@ -13,7 +13,7 @@ public class HttpRequestor {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpRequestor.class);
 
-	public static String getResponse(String URL) {
+	public  String getResponse(String URL) {
 
 		try {
 			String response_string = null;

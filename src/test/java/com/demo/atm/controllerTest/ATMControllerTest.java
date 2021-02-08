@@ -2,33 +2,32 @@ package com.demo.atm.controllerTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.demo.atm.controller.ATMController;
 import com.demo.atm.entity.ATM;
 import com.demo.atm.entity.Address;
 import com.demo.atm.http.HttpRequestor;
-import com.demo.atm.tranformer.JsonResponseTransformer;
+import com.demo.atm.tranformer.JsonResponseTransformService;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(value = { JsonResponseTransformer.class, HttpRequestor.class })
 class ATMControllerTest {
 
 	@InjectMocks
 	ATMController atmController;
+
+	@Mock
+	JsonResponseTransformService jsonResponseTransformService;
 
 	String URL = "https://www.ing.nl/api/locator/atms/";
 	String response = ")]}',[{\n" + "\"address\": {\n" + "\"housenumber\": \"test\",\n"
@@ -51,12 +50,11 @@ class ATMControllerTest {
 
 	@BeforeEach
 	public void beforeEach() {
-		PowerMockito.mockStatic(JsonResponseTransformer.class);
-		PowerMockito.mockStatic(HttpRequestor.class);
 
 		MockitoAnnotations.initMocks(this);
+		HttpRequestor httpRequestor = mock(HttpRequestor.class);
 
-		atmController = new ATMController(URL);
+		atmController = new ATMController(URL, jsonResponseTransformService, httpRequestor);
 
 		ATM atm1 = new ATM();
 		atm1.setDistance(10);
@@ -83,10 +81,11 @@ class ATMControllerTest {
 		atmCacheMap.put(atm2, city2);
 		atmCacheMap.put(atm3, city3);
 		ATM[] array = new ATM[] { atm1, atm2, atm3 };
-		when(HttpRequestor.getResponse(URL)).thenReturn(response);
+		when(httpRequestor.getResponse(URL)).thenReturn(response);
 		try {
 //			doReturn(array).when(jsonResponseTransformer).fromResponsetoArray(URL);
-			when(JsonResponseTransformer.fromResponsetoArray(URL)).thenReturn(array);
+			when(jsonResponseTransformService.fromResponsetoArray(response.substring(5, response.length())))
+					.thenReturn(array);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
@@ -104,11 +103,13 @@ class ATMControllerTest {
 	@Test
 	public void test_getAllATMS_happyPath() {
 
-		Set<ATM> atmSet = (Set<ATM>) atmController.getAllATMS().getBody();
+		List<ATM> atmSet = (List<ATM>) atmController.getAllATMS().getBody();
 		assertNotNull(atmSet);
 
 		assertEquals(atmCacheMap.keySet().size(), atmSet.size());
 
 	}
+	
+	
 
 }
