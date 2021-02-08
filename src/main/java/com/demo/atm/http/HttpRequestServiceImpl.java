@@ -8,11 +8,14 @@ import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-public class HttpRequestor {
+@Component
+public class HttpRequestServiceImpl implements HttpRequestService {
 
-	private static final Logger log = LoggerFactory.getLogger(HttpRequestor.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpRequestServiceImpl.class);
 
+	@Override
 	public  String getResponse(String URL) {
 
 		try {

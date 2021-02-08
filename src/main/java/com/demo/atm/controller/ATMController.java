@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,9 +31,8 @@ import com.demo.atm.entity.ATM;
 import com.demo.atm.enums.OPTIONALITY;
 import com.demo.atm.exception.ATMDataNotFoundException;
 import com.demo.atm.exception.DataValidationException;
-import com.demo.atm.http.HttpRequestor;
+import com.demo.atm.http.HttpRequestService;
 import com.demo.atm.tranformer.JsonResponseTransformService;
-import com.demo.atm.tranformer.JsonResponseTransformer;
 import com.demo.atm.validation.DtoValidationUtils;
 
 import io.swagger.annotations.Api;
@@ -50,20 +50,22 @@ public class ATMController {
 	String URL;
 
 	Map<ATM, String> atmCacheMap = new HashMap<>();
+	@Autowired
 	JsonResponseTransformService service;
-	HttpRequestor httpRequestor;
+	@Autowired
+	HttpRequestService httpRequestService;
 
 	public ATMController(@Value("${atm.request.url}") String URL, JsonResponseTransformService service,
-			HttpRequestor httpRequestor) {
+			HttpRequestService httpRequestService) {
 		this.URL = URL;
 		this.service = service;
-		this.httpRequestor = httpRequestor;
+		this.httpRequestService = httpRequestService;
 	}
 
 	@PostConstruct
 	public void postConstruct() {
 		ATM[] atmArray = null;
-		String response = httpRequestor.getResponse(URL);
+		String response = httpRequestService.getResponse(URL);
 		String mainResponse = response.substring(5, response.length());
 		atmArray = service.fromResponsetoArray(mainResponse);
 		for (ATM atm : atmArray) {

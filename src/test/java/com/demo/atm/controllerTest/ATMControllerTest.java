@@ -2,7 +2,6 @@ package com.demo.atm.controllerTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -18,7 +17,7 @@ import org.mockito.MockitoAnnotations;
 import com.demo.atm.controller.ATMController;
 import com.demo.atm.entity.ATM;
 import com.demo.atm.entity.Address;
-import com.demo.atm.http.HttpRequestor;
+import com.demo.atm.http.HttpRequestService;
 import com.demo.atm.tranformer.JsonResponseTransformService;
 
 class ATMControllerTest {
@@ -28,6 +27,9 @@ class ATMControllerTest {
 
 	@Mock
 	JsonResponseTransformService jsonResponseTransformService;
+
+	@Mock
+	HttpRequestService httpRequestService;
 
 	String URL = "https://www.ing.nl/api/locator/atms/";
 	String response = ")]}',[{\n" + "\"address\": {\n" + "\"housenumber\": \"test\",\n"
@@ -52,9 +54,8 @@ class ATMControllerTest {
 	public void beforeEach() {
 
 		MockitoAnnotations.initMocks(this);
-		HttpRequestor httpRequestor = mock(HttpRequestor.class);
 
-		atmController = new ATMController(URL, jsonResponseTransformService, httpRequestor);
+		atmController = new ATMController(URL, jsonResponseTransformService, httpRequestService);
 
 		ATM atm1 = new ATM();
 		atm1.setDistance(10);
@@ -81,7 +82,7 @@ class ATMControllerTest {
 		atmCacheMap.put(atm2, city2);
 		atmCacheMap.put(atm3, city3);
 		ATM[] array = new ATM[] { atm1, atm2, atm3 };
-		when(httpRequestor.getResponse(URL)).thenReturn(response);
+		when(httpRequestService.getResponse(URL)).thenReturn(response);
 		try {
 //			doReturn(array).when(jsonResponseTransformer).fromResponsetoArray(URL);
 			when(jsonResponseTransformService.fromResponsetoArray(response.substring(5, response.length())))
@@ -109,7 +110,5 @@ class ATMControllerTest {
 		assertEquals(atmCacheMap.keySet().size(), atmSet.size());
 
 	}
-	
-	
 
 }
